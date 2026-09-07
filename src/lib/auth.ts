@@ -125,3 +125,37 @@ export async function signUp(input: {
 export async function signOut() {
   await clientOrThrow().auth.signOut();
 }
+
+export async function updateMyProfile(patch: { fullName?: string; phone?: string; city?: string }) {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Not signed in.");
+
+  const dbPatch: Record<string, string> = {};
+  if (patch.fullName !== undefined) dbPatch.full_name = patch.fullName;
+  if (patch.phone !== undefined) dbPatch.phone = patch.phone;
+  if (patch.city !== undefined) dbPatch.city = patch.city;
+
+  const { error } = await client.from("profiles").update(dbPatch).eq("user_id", userId);
+  if (error) throw error;
+}
+
+// Deactivating keeps all the person's data (bookings, reviews, history) intact,
+// just flips a flag and signs them out. An artist's profile also disappears
+// from the public "Find Artists" directory the moment this runs (see
+// v_artist_directory in nailbook-artist-v3.sql).
+export async function deactivateMyAccount() {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Not signed in.");
+
+  const { error } = await client
+    .from("profiles")
+    .update({ is_deactivated: true, deactivated_at: new Date().toISOString() })
+    .eq("user_id", userId);
+  if (error) throw error;
+
+  await client.auth.signOut();
+}

@@ -9,6 +9,11 @@ import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import DashboardClient from "./pages/DashboardClient";
 import DashboardArtist from "./pages/DashboardArtist";
+import ArtistBookings from "./pages/ArtistBookings";
+import ArtistServices from "./pages/ArtistServices";
+import ArtistClients from "./pages/ArtistClients";
+import ArtistEarnings from "./pages/ArtistEarnings";
+import ArtistShell from "./components/ArtistShell";
 import Settings from "./pages/Settings";
 import Contact from "./pages/Contact";
 import Help from "./pages/Help";
@@ -33,7 +38,11 @@ export default function App() {
               <Route path="/signup/client" element={<Signup role="client"/>}/>
               <Route path="/signup/artist" element={<Signup role="artist"/>}/>
               <Route path="/dashboard/client" element={<ProtectedRoute role="client"><DashboardClient/></ProtectedRoute>}/>
-              <Route path="/dashboard/artist" element={<ProtectedRoute role="artist"><DashboardArtist/></ProtectedRoute>}/>
+              <Route path="/dashboard/artist" element={<ProtectedRoute role="artist"><ArtistShell><DashboardArtist/></ArtistShell></ProtectedRoute>}/>
+              <Route path="/dashboard/artist/bookings" element={<ProtectedRoute role="artist"><ArtistShell><ArtistBookings/></ArtistShell></ProtectedRoute>}/>
+              <Route path="/dashboard/artist/services" element={<ProtectedRoute role="artist"><ArtistShell><ArtistServices/></ArtistShell></ProtectedRoute>}/>
+              <Route path="/dashboard/artist/clients" element={<ProtectedRoute role="artist"><ArtistShell><ArtistClients/></ArtistShell></ProtectedRoute>}/>
+              <Route path="/dashboard/artist/earnings" element={<ProtectedRoute role="artist"><ArtistShell><ArtistEarnings/></ArtistShell></ProtectedRoute>}/>
               <Route path="/settings" element={<ProtectedRoute><Settings/></ProtectedRoute>}/>
               <Route path="/contact" element={<Contact/>}/>
               <Route path="/help" element={<Help/>}/>

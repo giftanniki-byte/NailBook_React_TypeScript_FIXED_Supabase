@@ -7,7 +7,8 @@ import { signIn } from "../lib/auth";
 export default function Login({ role }: { role: "client" | "artist" }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const destination = (location.state as { from?: string } | null)?.from ?? "/";
+  const fallback = role === "artist" ? "/dashboard/artist" : "/dashboard/client";
+const destination = (location.state as { from?: string } | null)?.from ?? fallback;
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");

@@ -8,8 +8,7 @@ import ProfileMenu from "./ProfileMenu";
 export default function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
-  const { user, loading } = useAuth();
-
+  const { user, profile, loading } = useAuth();
   const closeMenu = () => setOpen(false);
 
   // Don't remember /login or /signup itself as the "return to" page —
@@ -33,8 +32,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
         <nav className={open ? "navLinks open" : "navLinks"}>
           <NavLink to="/" onClick={closeMenu}>Home</NavLink>
-          <NavLink to="/artists" onClick={closeMenu}>Find Artist</NavLink>
-
+{profile?.role !== "artist" && (
+  <NavLink to="/artists" onClick={closeMenu}>Find Artist</NavLink>
+)}
           {!loading && !user && (
             <NavLink to="/login" state={returnState} onClick={closeMenu}>Sign In</NavLink>
           )}
