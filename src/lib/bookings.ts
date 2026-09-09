@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import type { ClientBookingRow } from "../types";
 
 export type BookableService = {
   service_id: number;
@@ -57,4 +58,35 @@ export async function createBookingRequest(input: {
   });
 
   if (error) throw error;
+}
+
+export async function listMyBookingsAsClient(): Promise<ClientBookingRow[]> {
+  if (!supabase) return [];
+
+  const { data: userData } = await supabase.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return [];
+
+  const { data, error } = await supabase
+    .from("v_my_bookings")
+    .select("*")
+    .eq("client_id", userId)
+    .order("booking_date", { ascending: true })
+    .order("start_time", { ascending: true });
+
+  if (error) throw error;
+
+  return (data ?? []).map((row) => ({
+    booking_id: row.booking_id,
+    client_id: row.client_id,
+    artist_id: row.artist_id,
+    service_id: row.service_id,
+    booking_date: row.booking_date,
+    start_time: row.start_time,
+    status: row.status,
+    price: row.price,
+    service_name: row.service_name,
+    artist_name: row.artist_name,
+    artist_location: row.artist_location,
+  }));
 }

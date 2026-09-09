@@ -6,7 +6,7 @@ export default function ArtistCard({ artist }: { artist: Artist }) {
   return (
     <article className="artistCard">
       <div className="artistImageWrap">
-        <img src={artist.image} alt={`${artist.name} nail work`} />
+        <img src={artist.image} alt={`${artist.name} nail work`} loading="lazy" />
         <button className="favoriteButton" type="button" aria-label={`Save ${artist.name}`}>
           <Heart size={18} />
         </button>

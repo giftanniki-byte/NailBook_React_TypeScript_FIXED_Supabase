@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import PageHeader from "../components/PageHeader";
+import PageMeta from "../components/PageMeta";
 import ArtistCard from "../components/ArtistCard";
 import { demoArtists, getArtists } from "../lib/artists";
 import type { Artist } from "../types";
@@ -29,6 +30,10 @@ export default function FindArtist() {
 
   return (
     <main>
+      <PageMeta
+        title="Find a Nail Artist Near You | NailBook"
+        description="Browse nail artists by city and specialty, compare services and prices, and book with confidence on NailBook."
+      />
       <PageHeader
         eyebrow="DISCOVER"
         title="Find an Artist"

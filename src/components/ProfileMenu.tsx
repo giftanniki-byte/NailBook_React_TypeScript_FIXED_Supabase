@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LayoutDashboard, LogOut, Moon, Settings, Sun } from "lucide-react";
+import { LogOut, Moon, Settings, Sun } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
 import { useTheme } from "../lib/ThemeContext";
 import { signOut } from "../lib/auth";
@@ -29,7 +29,6 @@ export default function ProfileMenu() {
     };
   }, []);
 
-  const dashboardPath = profile?.role === "artist" ? "/dashboard/artist" : "/dashboard/client";
   const initial = (profile?.full_name?.trim()?.[0] ?? "U").toUpperCase();
 
   async function handleSignOut() {
@@ -51,14 +50,15 @@ export default function ProfileMenu() {
         aria-label="Account menu"
         onClick={() => setOpen((value) => !value)}
       >
-        <span className="profileAvatar">{initial}</span>
+        {profile?.avatar_url ? (
+          <img className="profileAvatar profileAvatarPhoto" src={profile.avatar_url} alt="" />
+        ) : (
+          <span className="profileAvatar">{initial}</span>
+        )}
       </button>
 
       {open && (
         <div className="profileDropdown" role="menu">
-          <Link to={dashboardPath} role="menuitem" onClick={() => setOpen(false)}>
-            <LayoutDashboard size={17} /> Dashboard
-          </Link>
           <Link to="/settings" role="menuitem" onClick={() => setOpen(false)}>
             <Settings size={17} /> Settings
           </Link>

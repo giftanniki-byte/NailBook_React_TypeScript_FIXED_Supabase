@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { listArtistServices, removeArtistService, upsertArtistService } from "../lib/artistDashboard";
+import { Plus, Sparkles } from "lucide-react";
+import { addCustomService, listArtistServices, removeArtistService, upsertArtistService } from "../lib/artistDashboard";
 import type { ArtistServiceRow } from "../types";
 
 export default function ArtistServices() {
@@ -7,6 +8,11 @@ export default function ArtistServices() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [savingId, setSavingId] = useState<number | null>(null);
+
+  const [customName, setCustomName] = useState("");
+  const [customPrice, setCustomPrice] = useState("");
+  const [customDuration, setCustomDuration] = useState("60");
+  const [addingCustom, setAddingCustom] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -63,17 +69,74 @@ export default function ArtistServices() {
     }
   }
 
+  async function handleAddCustom() {
+    const name = customName.trim();
+    if (!name) {
+      setError("Give your service a name first.");
+      return;
+    }
+    setAddingCustom(true);
+    setError("");
+    try {
+      await addCustomService({
+        name,
+        durationMinutes: Number(customDuration) || 60,
+        price: Number(customPrice) || 0,
+      });
+      setCustomName("");
+      setCustomPrice("");
+      setCustomDuration("60");
+      await load();
+    } catch {
+      setError("Couldn't add that service. Try again.");
+    } finally {
+      setAddingCustom(false);
+    }
+  }
+
   return (
     <main className="artistDash">
       <div className="artistDashTop">
         <div>
           <span className="eyebrow">SERVICES</span>
           <h1>Your services & pricing.</h1>
-          <p>Turn on the services you offer, and set your own price and duration for each.</p>
+          <p>Turn on the services you offer, set your own price and duration — or add something of your own.</p>
         </div>
       </div>
 
       {error && <div className="formMessage error" style={{ marginBottom: 16 }}>{error}</div>}
+
+      <div className="addServiceCard">
+        <div className="addServiceHead">
+          <span className="addServiceIcon"><Sparkles size={18} /></span>
+          <div>
+            <strong>Offer something not on the list?</strong>
+            <p className="mutedLine">Add your own service — it'll turn on for you right away.</p>
+          </div>
+        </div>
+        <div className="addServiceFields">
+          <label className="formField">
+            <span>Service name</span>
+            <input
+              type="text"
+              placeholder="e.g. Ombré Fade"
+              value={customName}
+              onChange={(e) => setCustomName(e.target.value)}
+            />
+          </label>
+          <label className="formField">
+            <span>Price (R)</span>
+            <input type="number" min={0} value={customPrice} onChange={(e) => setCustomPrice(e.target.value)} placeholder="0" />
+          </label>
+          <label className="formField">
+            <span>Duration (min)</span>
+            <input type="number" min={15} step={15} value={customDuration} onChange={(e) => setCustomDuration(e.target.value)} />
+          </label>
+          <button type="button" className="primaryButton" onClick={handleAddCustom} disabled={addingCustom}>
+            <Plus size={16} /> {addingCustom ? "Adding…" : "Add Service"}
+          </button>
+        </div>
+      </div>
 
       {loading ? (
         <p className="mutedLine">Loading…</p>

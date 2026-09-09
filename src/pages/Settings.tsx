@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Instagram, Music2, Phone as PhoneIcon, Trash2, Upload } from "lucide-react";
+import { Instagram, Music2, Phone as PhoneIcon, Trash2, Upload, User } from "lucide-react";
 import PageHeader from "../components/PageHeader";
 import LocationAutocomplete from "../components/LocationAutocomplete";
 import PhoneInput from "../components/PhoneInput";
 import { useAuth } from "../lib/AuthContext";
 import { useTheme } from "../lib/ThemeContext";
-import { deactivateMyAccount, updateMyProfile } from "../lib/auth";
+import { deactivateMyAccount, removeAvatar, updateMyProfile, uploadAvatar } from "../lib/auth";
 import {
   getMyArtistProfile,
   removeGalleryPhoto,
@@ -119,6 +119,37 @@ export default function Settings() {
     }
   }
 
+  // ---- Profile photo (avatar) ----
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+
+  async function handleAvatarSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setAvatarUploading(true);
+    setAvatarError("");
+    try {
+      await uploadAvatar(file);
+      await refreshProfile();
+    } catch {
+      setAvatarError("Couldn't upload that photo. Try a smaller image or a different format.");
+    } finally {
+      setAvatarUploading(false);
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
+    }
+  }
+
+  async function handleAvatarRemove() {
+    setAvatarError("");
+    try {
+      await removeAvatar();
+      await refreshProfile();
+    } catch {
+      setAvatarError("Couldn't remove your photo. Try again.");
+    }
+  }
+
   // ---- Deactivate account ----
   const [confirmingDeactivate, setConfirmingDeactivate] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
@@ -141,6 +172,42 @@ export default function Settings() {
       <PageHeader eyebrow="ACCOUNT" title="Settings" text="Manage your NailBook account preferences." />
 
       <section className="contentSection settingsGrid">
+        <div className="settingsCard">
+          <h2>Profile Photo</h2>
+          <div className="avatarRow">
+            <div className="avatarPreview">
+              {profile?.avatar_url ? (
+                <img src={profile.avatar_url} alt="Your profile" loading="lazy" />
+              ) : (
+                <User size={26} />
+              )}
+            </div>
+            <div className="avatarActions">
+              <button
+                type="button"
+                className="outlineButton smallButton"
+                onClick={() => avatarInputRef.current?.click()}
+                disabled={avatarUploading}
+              >
+                <Upload size={14} /> {avatarUploading ? "Uploading…" : profile?.avatar_url ? "Change Photo" : "Upload Photo"}
+              </button>
+              {profile?.avatar_url && (
+                <button type="button" className="outlineButton smallButton dangerButton" onClick={handleAvatarRemove}>
+                  <Trash2 size={14} /> Remove
+                </button>
+              )}
+            </div>
+          </div>
+          <input
+            ref={avatarInputRef}
+            type="file"
+            accept="image/*"
+            style={{ display: "none" }}
+            onChange={handleAvatarSelected}
+          />
+          {avatarError && <p className="formMessage error">{avatarError}</p>}
+        </div>
+
         <div className="settingsCard">
           <h2>Profile</h2>
           <label className="formField">
@@ -236,7 +303,7 @@ export default function Settings() {
               <div className="galleryGrid">
                 {artistProfile?.gallery.map((url) => (
                   <div key={url} className="galleryThumb">
-                    <img src={url} alt="Portfolio work" />
+                    <img src={url} alt="Portfolio work" loading="lazy" />
                     <button type="button" className="galleryRemove" onClick={() => handleRemovePhoto(url)} aria-label="Remove photo">
                       <Trash2 size={14} />
                     </button>

@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarCheck, ClipboardList, Star, Wallet, MapPin, Instagram } from "lucide-react";
+import { CalendarCheck, ClipboardList, Star, Wallet, MapPin, Instagram, MessageCircle } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
 import { getMyArtistProfile, getTodayMetrics, getUpNextBooking, updateBookingStatus } from "../lib/artistDashboard";
+import BookingChat from "../components/BookingChat";
 import type { ArtistBooking, ArtistProfileRow, ArtistTodayMetrics } from "../types";
 
 export default function DashboardArtist() {
@@ -12,6 +13,7 @@ export default function DashboardArtist() {
   const [artistProfile, setArtistProfile] = useState<ArtistProfileRow | null>(null);
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState("");
+  const [chatOpen, setChatOpen] = useState(false);
 
   async function loadAll() {
     setLoading(true);
@@ -100,6 +102,14 @@ export default function DashboardArtist() {
               </div>
             </div>
             <div className="artistUpNextActions">
+              <button
+                type="button"
+                className="chatIconButton"
+                aria-label={`Message ${upNext.client_name}`}
+                onClick={() => setChatOpen(true)}
+              >
+                <MessageCircle size={17} />
+              </button>
               {upNext.status === "pending" ? (
                 <>
                   <button className="primaryButton smallButton" type="button" onClick={() => respond("confirmed")}>Accept</button>
@@ -112,6 +122,14 @@ export default function DashboardArtist() {
           </div>
         )}
       </section>
+
+      {chatOpen && upNext && (
+        <BookingChat
+          bookingId={upNext.booking_id}
+          otherPartyName={upNext.client_name}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
 
       {artistProfile && (
         <section className="artistProfileSummary">
@@ -140,7 +158,7 @@ export default function DashboardArtist() {
           {artistProfile.gallery.length > 0 && (
             <div className="artistPortfolioRow">
               {artistProfile.gallery.slice(0, 4).map((url) => (
-                <img key={url} src={url} alt="Portfolio work" />
+                <img key={url} src={url} alt="Portfolio work" loading="lazy" />
               ))}
             </div>
           )}

@@ -22,6 +22,7 @@ export type Profile = {
   location: string | null;
   business_name: string | null;
   services: string[] | null;
+  avatar_url: string | null;
 };
 
 // ---- Artist dashboard (v2) ----
@@ -93,4 +94,26 @@ export type ArtistProfileRow = {
   tiktok_handle: string | null;
   whatsapp_number: string | null;
   working_hours: Record<string, { open: string; close: string; closed: boolean }>;
+};
+
+export type ClientBookingRow = {
+  booking_id: string;
+  client_id: string;
+  artist_id: string;
+  service_id: number;
+  booking_date: string;
+  start_time: string;
+  status: BookingStatus;
+  price: number;
+  service_name: string;
+  artist_name: string;
+  artist_location: string;
+};
+
+export type BookingMessage = {
+  message_id: string;
+  booking_id: string;
+  sender_id: string;
+  body: string;
+  created_at: string;
 };

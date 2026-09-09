@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
+import { MessageCircle } from "lucide-react";
 import { listBookings, updateBookingStatus } from "../lib/artistDashboard";
+import BookingChat from "../components/BookingChat";
 import type { ArtistBooking, BookingStatus } from "../types";
 
 const FILTERS: { label: string; value: BookingStatus | "all" }[] = [
@@ -16,6 +18,7 @@ export default function ArtistBookings() {
   const [bookings, setBookings] = useState<ArtistBooking[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activeChat, setActiveChat] = useState<{ bookingId: string; clientName: string } | null>(null);
 
   async function load() {
     setLoading(true);
@@ -86,6 +89,14 @@ export default function ArtistBookings() {
               </div>
               <span className={`artistStatusTag ${b.status}`}>{b.status}</span>
               <div className="artistBookingActions">
+                <button
+                  type="button"
+                  className="chatIconButton"
+                  aria-label={`Message ${b.client_name}`}
+                  onClick={() => setActiveChat({ bookingId: b.booking_id, clientName: b.client_name })}
+                >
+                  <MessageCircle size={17} />
+                </button>
                 {b.status === "pending" && (
                   <>
                     <button className="primaryButton smallButton" type="button" onClick={() => act(b.booking_id, "confirmed")}>Accept</button>
@@ -99,6 +110,14 @@ export default function ArtistBookings() {
             </div>
           ))}
         </div>
+      )}
+
+      {activeChat && (
+        <BookingChat
+          bookingId={activeChat.bookingId}
+          otherPartyName={activeChat.clientName}
+          onClose={() => setActiveChat(null)}
+        />
       )}
     </main>
   );

@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { LayoutDashboard, CalendarCheck, Sparkles, Users, Wallet } from "lucide-react";
-import { getTodayMetrics, setOnlineStatus } from "../lib/artistDashboard";
+import { getTodayMetrics } from "../lib/artistDashboard";
+import { playBookingAlert } from "../lib/notifySound";
+import { useAuth } from "../lib/AuthContext";
+import { supabase } from "../lib/supabase";
 
 const TABS = [
   { to: "/dashboard/artist", label: "Dashboard", icon: LayoutDashboard, end: true },
@@ -13,37 +16,49 @@ const TABS = [
 ];
 
 export default function ArtistShell({ children }: { children: ReactNode }) {
-  const [online, setOnline] = useState<boolean | null>(null);
+  const { user } = useAuth();
   const [pending, setPending] = useState(0);
-  const [busy, setBusy] = useState(false);
+  const [justAlerted, setJustAlerted] = useState(false);
 
-  useEffect(() => {
-    let active = true;
+  function refreshPending() {
     getTodayMetrics()
       .then((metrics) => {
-        if (!active || !metrics) return;
-        setOnline(metrics.is_available);
-        setPending(metrics.pending_requests);
+        if (metrics) setPending(metrics.pending_requests);
       })
       .catch(() => undefined);
-    return () => {
-      active = false;
-    };
+  }
+
+  useEffect(() => {
+    refreshPending();
   }, []);
 
-  async function toggleOnline() {
-    if (online === null || busy) return;
-    const next = !online;
-    setBusy(true);
-    setOnline(next); // optimistic
-    try {
-      await setOnlineStatus(next);
-    } catch {
-      setOnline(!next); // revert on failure
-    } finally {
-      setBusy(false);
-    }
-  }
+  // Live alert for new booking requests — plays a chime and pulses the
+  // Bookings badge the instant a client books, without needing a refresh.
+  // Requires "bookings" to be added to the supabase_realtime publication
+  // (see nailbook-artist-v5.sql) — otherwise this subscribes but never
+  // receives anything.
+  useEffect(() => {
+    if (!supabase || !user) return;
+    const client = supabase;
+
+    const channel = client
+      .channel(`artist-new-bookings-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "bookings", filter: `artist_id=eq.${user.id}` },
+        () => {
+          playBookingAlert();
+          refreshPending();
+          setJustAlerted(true);
+          setTimeout(() => setJustAlerted(false), 2000);
+        },
+      )
+      .subscribe();
+
+    return () => {
+      client.removeChannel(channel);
+    };
+  }, [user]);
 
   return (
     <div className="artistShell">
@@ -53,20 +68,12 @@ export default function ArtistShell({ children }: { children: ReactNode }) {
             <NavLink key={to} to={to} end={end} className={({ isActive }) => (isActive ? "artistTab active" : "artistTab")}>
               <Icon size={17} />
               <span>{label}</span>
-              {label === "Bookings" && pending > 0 && <span className="artistTabBadge">{pending}</span>}
+              {label === "Bookings" && pending > 0 && (
+                <span className={justAlerted ? "artistTabBadge pulse" : "artistTabBadge"}>{pending}</span>
+              )}
             </NavLink>
           ))}
         </nav>
-
-        <button
-          type="button"
-          className={online ? "artistStatusPill online" : "artistStatusPill"}
-          onClick={toggleOnline}
-          disabled={online === null || busy}
-        >
-          <span className="artistStatusDot" />
-          {online === null ? "…" : online ? "Online" : "Offline"}
-        </button>
       </div>
 
       {children}

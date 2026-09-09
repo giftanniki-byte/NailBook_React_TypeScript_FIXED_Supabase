@@ -4,6 +4,7 @@ import { Link, useLocation, useParams } from "react-router-dom";
 import { demoArtists, getArtists } from "../lib/artists";
 import { createBookingRequest, getArtistBookableServices, type BookableService } from "../lib/bookings";
 import { useAuth } from "../lib/AuthContext";
+import PageMeta from "../components/PageMeta";
 import type { Artist } from "../types";
 
 export default function ArtistProfile() {
@@ -64,6 +65,10 @@ export default function ArtistProfile() {
 
   return (
     <main className="contentSection">
+      <PageMeta
+        title={`${artist.name} — Nail Artist in ${artist.city} | NailBook`}
+        description={`Book ${artist.name}, a nail artist in ${artist.city} specializing in ${(artist.services?.length ? artist.services : [artist.specialty]).join(", ")}. Rated ${artist.rating.toFixed(1)} on NailBook.`}
+      />
       <div className="profileHero">
         <img src={artist.image} alt={`${artist.name} portfolio`} />
         <div className="profileInfo">

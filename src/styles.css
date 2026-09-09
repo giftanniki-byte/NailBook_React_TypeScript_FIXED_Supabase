@@ -502,3 +502,178 @@ button { cursor: pointer; }
   .rolePane:first-child { border-right: none; border-bottom: 1px solid var(--border); }
   .rolePane { padding: 36px 28px; }
 }
+
+/* ---- Profile photo (avatar) — Settings page + top nav ---- */
+.avatarRow { display: flex; align-items: center; gap: 18px; margin-bottom: 4px; }
+.avatarPreview {
+  width: 72px; height: 72px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: var(--soft); color: var(--muted); display: grid; place-items: center;
+  border: 1px solid var(--border);
+}
+.avatarPreview img { width: 100%; height: 100%; object-fit: cover; }
+.avatarActions { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.avatarActions .smallButton { display: inline-flex; align-items: center; gap: 6px; }
+
+.profileAvatarPhoto { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+
+[data-theme="dark"] .avatarPreview { background: #171a24; }
+
+/* ---- New booking alert pulse (ArtistShell tab badge) ---- */
+.artistTabBadge.pulse { animation: bookingPulse 0.6s ease-in-out 2; }
+
+@keyframes bookingPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.35); background: var(--pink); color: #fff; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artistTabBadge.pulse { animation: none; }
+}
+
+/* ---- Password strength meter (Signup) ---- */
+.passwordStrength { margin: -10px 0 14px; }
+.passwordStrengthBar {
+  height: 5px; border-radius: 999px; background: var(--soft); overflow: hidden; margin-bottom: 6px;
+}
+.passwordStrengthFill { display: block; height: 100%; border-radius: 999px; transition: width .25s ease, background .25s ease; }
+.passwordStrengthFill.level-0 { width: 5%; background: #d3455a; }
+.passwordStrengthFill.level-1 { width: 25%; background: #d3455a; }
+.passwordStrengthFill.level-2 { width: 50%; background: #d99a2b; }
+.passwordStrengthFill.level-3 { width: 75%; background: #2f9e57; }
+.passwordStrengthFill.level-4 { width: 100%; background: #1f8b4d; }
+
+.passwordStrengthMeta { display: flex; justify-content: space-between; gap: 10px; font-size: 12.5px; }
+.passwordStrengthLabel { font-weight: 700; }
+.passwordStrengthLabel.level-0, .passwordStrengthLabel.level-1 { color: #d3455a; }
+.passwordStrengthLabel.level-2 { color: #b8842a; }
+.passwordStrengthLabel.level-3, .passwordStrengthLabel.level-4 { color: #1f8b4d; }
+
+/* ---- Online/Offline pill relocated into the main nav bar ---- */
+.navStatusPill { padding: 6px 13px; font-size: 12.5px; }
+
+@media (max-width: 900px) {
+  .navStatusPill { align-self: flex-start; }
+}
+
+/* ============================================================
+   BOOKING CHAT — a slide-over panel, opened per-booking, opt-in.
+   ============================================================ */
+
+.chatIconButton {
+  width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center;
+  border: 1px solid var(--border); background: #fff; color: var(--muted);
+}
+.chatIconButton:hover { border-color: var(--pink); color: var(--pink-dark); }
+
+.chatOverlay {
+  position: fixed; inset: 0; background: rgba(20, 16, 22, 0.35); z-index: 60;
+  display: flex; justify-content: flex-end;
+}
+.chatPanel {
+  width: min(400px, 92vw); height: 100%; background: #fff; box-shadow: -12px 0 40px rgba(0,0,0,.15);
+  display: flex; flex-direction: column; animation: chatSlideIn .22s ease;
+}
+@keyframes chatSlideIn { from { transform: translateX(24px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+.chatHeader {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 20px; border-bottom: 1px solid var(--border);
+}
+.chatCloseButton { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--muted); }
+.chatCloseButton:hover { background: var(--soft); color: var(--pink-dark); }
+
+.chatMessages { flex: 1; overflow-y: auto; padding: 18px 20px; display: flex; flex-direction: column; gap: 10px; }
+.chatEmptyState { text-align: center; margin-top: 30px; }
+
+.chatBubble {
+  max-width: 78%; align-self: flex-start; background: var(--soft); border-radius: 14px 14px 14px 4px;
+  padding: 9px 13px;
+}
+.chatBubble.mine {
+  align-self: flex-end; background: var(--pink); color: #fff; border-radius: 14px 14px 4px 14px;
+}
+.chatBubble p { margin: 0; font-size: 14px; line-height: 1.45; white-space: pre-wrap; word-break: break-word; }
+.chatBubbleTime { display: block; font-size: 10.5px; opacity: .65; margin-top: 3px; text-align: right; }
+
+.chatError { margin: 0 20px 10px; }
+
+.chatInputRow {
+  display: flex; gap: 8px; padding: 14px 16px; border-top: 1px solid var(--border);
+}
+.chatInputRow input {
+  flex: 1; border: 1px solid var(--border); border-radius: 10px; padding: 10px 13px; font-size: 14px;
+}
+.chatInputRow input:focus { outline: none; border-color: var(--pink); }
+.chatSendButton { width: 40px; height: 40px; padding: 0; display: grid; place-items: center; flex-shrink: 0; }
+
+[data-theme="dark"] .chatPanel { background: #171a24; }
+[data-theme="dark"] .chatHeader, [data-theme="dark"] .chatInputRow { border-color: var(--border); }
+[data-theme="dark"] .chatBubble { background: #20242f; }
+[data-theme="dark"] .chatInputRow input { background: #0f121a; color: var(--ink); }
+[data-theme="dark"] .chatIconButton { background: #171a24; }
+
+@media (max-width: 500px) {
+  .chatPanel { width: 100vw; }
+}
+
+/* ---- Client dashboard booking rows ---- */
+.clientBookingList { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
+.clientBookingRow {
+  display: flex; justify-content: space-between; align-items: center; gap: 10px;
+  border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px;
+}
+.clientBookingRow > div:first-child { display: flex; flex-direction: column; gap: 2px; }
+.clientBookingRowActions { display: flex; align-items: center; gap: 8px; }
+
+/* ---- Client dashboard: 3 metric cards instead of the artist's 4 ---- */
+.clientMetricGrid { grid-template-columns: repeat(3, 1fr) !important; }
+@media (max-width: 650px) { .clientMetricGrid { grid-template-columns: 1fr 1fr !important; } }
+
+/* ---- Confirm password mismatch hint ---- */
+.fieldHint.error { color: #d3455a; font-size: 12.5px; margin: -12px 0 12px; }
+
+/* ---- Initial-load splash — brief brand moment, not a loading spinner ---- */
+.splashScreen {
+  position: fixed; inset: 0; z-index: 100;
+  display: grid; place-items: center;
+  background: linear-gradient(135deg, #fff8fa, #fdf1f5);
+}
+.splashLogo {
+  color: var(--pink); font-size: 34px; font-weight: 800; letter-spacing: -1px;
+  animation: splashIn .5s ease;
+}
+@keyframes splashIn {
+  from { opacity: 0; transform: scale(0.94); }
+  to { opacity: 1; transform: scale(1); }
+}
+[data-theme="dark"] .splashScreen { background: linear-gradient(135deg, #0f121a, #171a24); }
+
+@media (prefers-reduced-motion: reduce) {
+  .splashLogo { animation: none; }
+}
+
+/* ---- Add-your-own-service card (Services tab) ---- */
+.addServiceCard {
+  border: 1.5px dashed #f0a5ba; border-radius: 16px; background: var(--soft);
+  padding: 22px 24px; margin-bottom: 26px;
+}
+.addServiceHead { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+.addServiceIcon {
+  width: 38px; height: 38px; border-radius: 11px; background: #fff; color: var(--pink-dark);
+  display: grid; place-items: center; flex-shrink: 0;
+}
+.addServiceHead strong { display: block; margin-bottom: 2px; }
+.addServiceFields {
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr auto; gap: 14px; align-items: end;
+}
+.addServiceFields .formField input { background: #fff; }
+.addServiceFields .primaryButton { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+
+[data-theme="dark"] .addServiceCard { background: #171a24; border-color: #4a2c37; }
+[data-theme="dark"] .addServiceIcon { background: #20242f; }
+[data-theme="dark"] .addServiceFields .formField input { background: #0f121a; }
+
+@media (max-width: 800px) {
+  .addServiceFields { grid-template-columns: 1fr 1fr; }
+  .addServiceFields .primaryButton { grid-column: 1 / -1; justify-content: center; }
+}

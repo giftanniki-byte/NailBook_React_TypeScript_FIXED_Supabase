@@ -1,9 +1,29 @@
 import { ArrowRight, CalendarCheck, Search, ShieldCheck, Sparkles } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
+import PageMeta from "../components/PageMeta";
+import { useAuth } from "../lib/AuthContext";
 
 export default function Home() {
+  const { user, profile, loading } = useAuth();
+
+  // A signed-in visitor lands on "/" if they click the logo, use a
+  // bookmark, or come back after closing the tab. Showing them a "Create
+  // an Account" marketing page at that point is irrelevant at best and
+  // confusing at worst — send them straight to their dashboard instead,
+  // the same way logging in already does.
+  if (loading) return <div className="loadingPage">Checking your account…</div>;
+
+  if (user) {
+    const dashboardPath = profile?.role === "artist" ? "/dashboard/artist" : "/dashboard/client";
+    return <Navigate to={dashboardPath} replace />;
+  }
+
   return (
     <main>
+      <PageMeta
+        title="NailBook — Book Trusted Nail Artists Near You"
+        description="Discover talented nail artists, compare services and prices, and book your next appointment in a few simple steps with NailBook."
+      />
       <section className="hero">
         <div className="heroContent">
           <span className="eyebrow">NAILBOOK</span>

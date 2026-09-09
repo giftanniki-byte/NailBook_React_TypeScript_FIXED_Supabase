@@ -159,3 +159,47 @@ export async function deactivateMyAccount() {
 
   await client.auth.signOut();
 }
+
+// ---- Profile photo (avatar) — works for clients and artists alike. ----
+// Separate from an artist's gallery/portfolio photos, which are about
+// showcasing work, not identifying the account. Reuses the same
+// "artist-gallery" storage bucket — its RLS policy scopes writes to each
+// user's own folder regardless of role, so this works for any account.
+
+export async function uploadAvatar(file: File): Promise<string> {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Not signed in.");
+
+  const ext = file.name.split(".").pop() ?? "jpg";
+  const path = `${userId}/avatar-${Date.now()}.${ext}`;
+
+  const { error: uploadError } = await client.storage.from("artist-gallery").upload(path, file, {
+    cacheControl: "3600",
+    upsert: false,
+  });
+  if (uploadError) throw uploadError;
+
+  const { data: publicUrl } = client.storage.from("artist-gallery").getPublicUrl(path);
+
+  const { error: updateError } = await client
+    .from("profiles")
+    .update({ avatar_url: publicUrl.publicUrl })
+    .eq("user_id", userId);
+  if (updateError) throw updateError;
+
+  return publicUrl.publicUrl;
+}
+
+export async function removeAvatar() {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Not signed in.");
+
+  const { error } = await client.from("profiles").update({ avatar_url: null }).eq("user_id", userId);
+  if (error) throw error;
+  // Not deleting the underlying storage object — harmless to leave an
+  // orphaned file behind, and avoids extra complexity parsing the old URL.
+}

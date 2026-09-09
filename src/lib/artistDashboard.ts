@@ -192,6 +192,63 @@ export async function removeArtistService(serviceId: number) {
   if (error) throw error;
 }
 
+/**
+ * Lets an artist add a service that isn't in the standard catalog. If a
+ * service with that exact name already exists, it's reused (turned on for
+ * this artist with the given price/duration) rather than erroring on the
+ * catalog's unique-name constraint — an artist typing "Acrylic" again
+ * almost certainly means the existing one, not a duplicate entry.
+ */
+export async function addCustomService(input: {
+  name: string;
+  durationMinutes: number;
+  price: number;
+}): Promise<void> {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) throw new Error("Not signed in.");
+
+  const name = input.name.trim();
+  if (!name) throw new Error("Give the service a name.");
+
+  const { data: inserted, error: insertError } = await client
+    .from("services")
+    .insert({
+      service_name: name,
+      default_duration_minutes: input.durationMinutes,
+      created_by: userId,
+    })
+    .select("service_id")
+    .single();
+
+  let serviceId: number;
+
+  if (insertError) {
+    // 23505 = unique_violation — a service with this name already exists.
+    if (insertError.code === "23505") {
+      const { data: existing, error: lookupError } = await client
+        .from("services")
+        .select("service_id")
+        .ilike("service_name", name)
+        .maybeSingle();
+      if (lookupError || !existing) throw insertError;
+      serviceId = existing.service_id;
+    } else {
+      throw insertError;
+    }
+  } else {
+    serviceId = inserted.service_id;
+  }
+
+  await upsertArtistService({
+    serviceId,
+    price: input.price,
+    durationMinutes: input.durationMinutes,
+    isAvailable: true,
+  });
+}
+
 // ---- Clients ----
 
 export async function listArtistClients(): Promise<ArtistClientRow[]> {
