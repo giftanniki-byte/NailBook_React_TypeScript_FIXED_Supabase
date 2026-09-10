@@ -11,6 +11,7 @@ export type Artist = {
   image: string;
   bio?: string;
   services?: string[];
+  isOnline?: boolean;
 };
 
 export type Profile = {
@@ -64,6 +65,7 @@ export type ArtistServiceRow = {
   duration_minutes: number | null;
   is_available: boolean;
   offered: boolean;
+  created_by: string | null;
 };
 
 export type ArtistClientRow = {
@@ -116,4 +118,5 @@ export type BookingMessage = {
   sender_id: string;
   body: string;
   created_at: string;
+  edited_at: string | null;
 };

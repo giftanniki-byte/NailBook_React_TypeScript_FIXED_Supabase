@@ -1,4 +1,5 @@
 import { supabase } from "./supabase";
+import { validateImageFile } from "./fileValidation";
 import type {
   ArtistBooking,
   ArtistClientRow,
@@ -260,6 +261,28 @@ export async function listArtistClients(): Promise<ArtistClientRow[]> {
   return (data ?? []) as ArtistClientRow[];
 }
 
+// A lightweight combined "how's business going" figure for the main
+// Dashboard tab — lifetime totals, distinct from the day-scoped metric
+// row above it. Uses a count-only query for clients (no need to fetch
+// full rows just to know how many there are).
+export async function getBusinessSnapshot(): Promise<{ totalEarned: number; clientCount: number }> {
+  const client = clientOrThrow();
+  const { data: userData } = await client.auth.getUser();
+  const userId = userData.user?.id;
+  if (!userId) return { totalEarned: 0, clientCount: 0 };
+
+  const [earningsResult, clientsResult] = await Promise.all([
+    client.from("bookings").select("price").eq("artist_id", userId).eq("status", "completed"),
+    client.from("v_artist_clients").select("client_id", { count: "exact", head: true }),
+  ]);
+
+  if (earningsResult.error) throw earningsResult.error;
+  if (clientsResult.error) throw clientsResult.error;
+
+  const totalEarned = (earningsResult.data ?? []).reduce((sum, row) => sum + Number(row.price), 0);
+  return { totalEarned, clientCount: clientsResult.count ?? 0 };
+}
+
 export async function saveClientNote(clientId: string, note: string) {
   const client = clientOrThrow();
   const { data: userData } = await client.auth.getUser();
@@ -343,6 +366,9 @@ export async function updateMyArtistProfile(patch: Partial<Pick<ArtistProfileRow
 // nailbook.sql, scoped by RLS to each artist's own folder).
 
 export async function uploadGalleryPhoto(file: File): Promise<string> {
+  const validationError = validateImageFile(file);
+  if (validationError) throw new Error(validationError);
+
   const client = clientOrThrow();
   const { data: userData } = await client.auth.getUser();
   const userId = userData.user?.id;

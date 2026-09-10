@@ -1,6 +1,7 @@
 import type { Session, User } from "@supabase/supabase-js";
 import type { Profile, Role } from "../types";
 import { supabase } from "./supabase";
+import { validateImageFile } from "./fileValidation";
 
 function clientOrThrow() {
   if (!supabase) {
@@ -167,6 +168,9 @@ export async function deactivateMyAccount() {
 // user's own folder regardless of role, so this works for any account.
 
 export async function uploadAvatar(file: File): Promise<string> {
+  const validationError = validateImageFile(file);
+  if (validationError) throw new Error(validationError);
+
   const client = clientOrThrow();
   const { data: userData } = await client.auth.getUser();
   const userId = userData.user?.id;

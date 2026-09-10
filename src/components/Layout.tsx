@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, NavLink, useLocation } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
@@ -7,12 +7,24 @@ import { useArtistOnlineStatus } from "../lib/useArtistOnlineStatus";
 import ProfileMenu from "./ProfileMenu";
 import SplashScreen from "./SplashScreen";
 
+// The real auth check usually resolves almost instantly, which makes the
+// splash feel like a flicker rather than an intentional brand moment.
+// Holding it for at least this long (even once auth is ready) gives it a
+// deliberate, paced feel instead.
+const MIN_SPLASH_MS = 1200;
+
 export default function Layout({ children }: { children: ReactNode }) {
   const [open, setOpen] = useState(false);
   const location = useLocation();
   const { user, profile, loading } = useAuth();
   const isArtist = profile?.role === "artist";
   const { online, busy, error: statusError, toggle } = useArtistOnlineStatus(isArtist);
+  const [minTimeElapsed, setMinTimeElapsed] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   const closeMenu = () => setOpen(false);
 
@@ -22,10 +34,10 @@ export default function Layout({ children }: { children: ReactNode }) {
   const returnState = isAuthPage ? undefined : { from: location.pathname };
   const dashboardPath = isArtist ? "/dashboard/artist" : "/dashboard/client";
 
-  // Showcase the brand for the brief moment the session is being checked —
-  // this resolves almost instantly (it's a local check, not a network
-  // round trip most of the time), so it never adds real delay.
-  if (loading) return <SplashScreen />;
+  // Showcase the brand for a deliberate moment while the session is
+  // checked — held for a minimum duration so it reads as intentional
+  // rather than a flicker, but never adds real, uncapped delay.
+  if (loading || !minTimeElapsed) return <SplashScreen />;
 
   return (
     <div className="siteShell">

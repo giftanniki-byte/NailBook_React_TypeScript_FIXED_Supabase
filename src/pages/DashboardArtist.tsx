@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CalendarCheck, ClipboardList, Star, Wallet, MapPin, Instagram, MessageCircle } from "lucide-react";
+import { CalendarCheck, ClipboardList, Star, Wallet, MapPin, Instagram, MessageCircle, Users, TrendingUp } from "lucide-react";
 import { useAuth } from "../lib/AuthContext";
-import { getMyArtistProfile, getTodayMetrics, getUpNextBooking, updateBookingStatus } from "../lib/artistDashboard";
+import { getBusinessSnapshot, getMyArtistProfile, getTodayMetrics, getUpNextBooking, updateBookingStatus } from "../lib/artistDashboard";
 import BookingChat from "../components/BookingChat";
 import type { ArtistBooking, ArtistProfileRow, ArtistTodayMetrics } from "../types";
 
@@ -14,14 +14,21 @@ export default function DashboardArtist() {
   const [loading, setLoading] = useState(true);
   const [actionError, setActionError] = useState("");
   const [chatOpen, setChatOpen] = useState(false);
+  const [snapshot, setSnapshot] = useState<{ totalEarned: number; clientCount: number } | null>(null);
 
   async function loadAll() {
     setLoading(true);
     try {
-      const [m, next, ap] = await Promise.all([getTodayMetrics(), getUpNextBooking(), getMyArtistProfile()]);
+      const [m, next, ap, snap] = await Promise.all([
+        getTodayMetrics(),
+        getUpNextBooking(),
+        getMyArtistProfile(),
+        getBusinessSnapshot(),
+      ]);
       setMetrics(m);
       setUpNext(next);
       setArtistProfile(ap);
+      setSnapshot(snap);
     } catch {
       setActionError("Couldn't load your dashboard. Pull to refresh or try again shortly.");
     } finally {
@@ -129,6 +136,28 @@ export default function DashboardArtist() {
           otherPartyName={upNext.client_name}
           onClose={() => setChatOpen(false)}
         />
+      )}
+
+      {!loading && snapshot && (
+        <section className="businessSnapshot">
+          <div className="businessSnapshotIntro">
+            <TrendingUp size={18} />
+            <span>Your business, at a glance</span>
+          </div>
+          <div className="businessSnapshotStats">
+            <div className="businessSnapshotStat">
+              <Wallet size={22} />
+              <strong>R{snapshot.totalEarned.toLocaleString()}</strong>
+              <span>earned all time</span>
+            </div>
+            <div className="businessSnapshotDivider" />
+            <div className="businessSnapshotStat">
+              <Users size={22} />
+              <strong>{snapshot.clientCount}</strong>
+              <span>{snapshot.clientCount === 1 ? "client served" : "clients served"}</span>
+            </div>
+          </div>
+        </section>
       )}
 
       {artistProfile && (

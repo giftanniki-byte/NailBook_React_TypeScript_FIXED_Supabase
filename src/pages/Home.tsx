@@ -1,10 +1,31 @@
-import { ArrowRight, CalendarCheck, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
+import { ArrowRight, CalendarCheck, MapPin, Search, Sparkles } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 import PageMeta from "../components/PageMeta";
+import ArtistCard from "../components/ArtistCard";
 import { useAuth } from "../lib/AuthContext";
+import { getArtists } from "../lib/artists";
+import { getPlatformStats, type PlatformStats } from "../lib/homeStats";
+import type { Artist } from "../types";
 
 export default function Home() {
   const { user, profile, loading } = useAuth();
+  const [featured, setFeatured] = useState<Artist[]>([]);
+  const [stats, setStats] = useState<PlatformStats | null>(null);
+
+  useEffect(() => {
+    getArtists()
+      .then((artists) => {
+        // Only ever feature real artists on the marketing page — never the
+        // built-in demo fallback records used when the database is empty
+        // or unreachable.
+        const real = artists.filter((a) => !a.id.startsWith("demo-"));
+        setFeatured([...real].sort((a, b) => b.rating - a.rating).slice(0, 3));
+      })
+      .catch(() => undefined);
+
+    getPlatformStats().then(setStats).catch(() => undefined);
+  }, []);
 
   // A signed-in visitor lands on "/" if they click the logo, use a
   // bookmark, or come back after closing the tab. Showing them a "Create
@@ -18,36 +39,74 @@ export default function Home() {
     return <Navigate to={dashboardPath} replace />;
   }
 
+  const showStats = stats && stats.artistCount > 0;
+
   return (
     <main>
       <PageMeta
         title="NailBook — Book Trusted Nail Artists Near You"
         description="Discover talented nail artists, compare services and prices, and book your next appointment in a few simple steps with NailBook."
       />
+
       <section className="hero">
         <div className="heroContent">
           <span className="eyebrow">NAILBOOK</span>
-          <h1>Beautiful nails start with the right artist.</h1>
-          <p>Discover talented nail artists, compare services and book your next appointment in a few simple steps.</p>
+          <h1>Find your perfect nail artist.</h1>
+          <p>Browse real portfolios, compare services and prices, and book with confidence — all in one place.</p>
           <div className="heroActions">
-            <Link className="primaryButton" to="/artists">Find an Artist <ArrowRight size={17} /></Link>
-            <Link className="textButton" to="/signup">Create an Account</Link>
+            <Link className="primaryButton" to="/artists"><MapPin size={17} /> Find Artists Near Me</Link>
+            <Link className="outlineButton" to="/signup/artist">Join as an Artist</Link>
           </div>
+
+          {showStats && (
+            <div className="heroStats">
+              <div><strong>{stats!.artistCount}</strong><span>Artists</span></div>
+              <div><strong>{stats!.completedBookingCount}</strong><span>Bookings completed</span></div>
+              <div><strong>{stats!.cityCount}</strong><span>Cities served</span></div>
+            </div>
+          )}
         </div>
       </section>
+
+      {featured.length > 0 && (
+        <section className="featuredSection">
+          <div className="sectionHeading spread">
+            <div>
+              <span className="eyebrow">TOP RATED</span>
+              <h2>Featured artists near you</h2>
+            </div>
+            <Link className="textButton" to="/artists">View all artists <ArrowRight size={16} /></Link>
+          </div>
+          <div className="artistGrid">
+            {featured.map((artist) => (
+              <ArtistCard key={artist.id} artist={artist} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <section className="featureSection">
         <div className="sectionHeading centered">
           <span className="eyebrow">HOW IT WORKS</span>
-          <h2>Everything you need in one place.</h2>
-          <p>Whether you are looking for a nail artist or managing your own bookings, NailBook keeps the process simple.</p>
+          <h2>Booking made simple.</h2>
         </div>
 
-        <div className="featureGrid">
-          <div className="featureCard"><Search /><h3>Find Artists</h3><p>Search by city and specialty to find artists that match what you need.</p></div>
-          <div className="featureCard"><CalendarCheck /><h3>Book Easily</h3><p>Open an artist profile and send a booking request without unnecessary steps.</p></div>
-          <div className="featureCard"><ShieldCheck /><h3>Build Trust</h3><p>Give clients clear information about your services, location and availability.</p></div>
-          <div className="featureCard"><Sparkles /><h3>Show Your Work</h3><p>Artists can use their profiles to showcase services and attract new clients.</p></div>
+        <div className="howItWorksGrid">
+          <div className="howItWorksStep">
+            <span className="howItWorksNumber"><Search size={20} /></span>
+            <h3>Search & discover</h3>
+            <p>Find talented artists near you and explore their portfolios, reviews, and styles.</p>
+          </div>
+          <div className="howItWorksStep">
+            <span className="howItWorksNumber"><CalendarCheck size={20} /></span>
+            <h3>Book instantly</h3>
+            <p>Choose your service, time, and date. Send a request in just a few taps.</p>
+          </div>
+          <div className="howItWorksStep">
+            <span className="howItWorksNumber"><Sparkles size={20} /></span>
+            <h3>Enjoy your appointment</h3>
+            <p>Relax and get your perfect set from an artist you chose with confidence.</p>
+          </div>
         </div>
       </section>
 

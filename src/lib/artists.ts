@@ -123,6 +123,7 @@ export async function getArtists(): Promise<Artist[]> {
       image: getGalleryImage(row.gallery),
       bio: row.bio || "Professional nail artist available through NailBook.",
       services,
+      isOnline: row.is_available,
     };
   });
 }

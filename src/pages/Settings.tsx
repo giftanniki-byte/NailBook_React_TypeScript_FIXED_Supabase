@@ -101,8 +101,8 @@ export default function Settings() {
     try {
       const url = await uploadGalleryPhoto(file);
       setArtistProfile((prev) => (prev ? { ...prev, gallery: [...prev.gallery, url] } : prev));
-    } catch {
-      setGalleryError("Couldn't upload that photo. Try a smaller image or a different format.");
+    } catch (err) {
+      setGalleryError(err instanceof Error ? err.message : "Couldn't upload that photo. Try again.");
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = "";
@@ -132,8 +132,8 @@ export default function Settings() {
     try {
       await uploadAvatar(file);
       await refreshProfile();
-    } catch {
-      setAvatarError("Couldn't upload that photo. Try a smaller image or a different format.");
+    } catch (err) {
+      setAvatarError(err instanceof Error ? err.message : "Couldn't upload that photo. Try again.");
     } finally {
       setAvatarUploading(false);
       if (avatarInputRef.current) avatarInputRef.current.value = "";
